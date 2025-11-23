@@ -33,10 +33,10 @@ class AnnouncementService
             return $e;
         }
     }
-    public function update($request, $id)
+    public function update($request)
     {
         try {
-            $announcement = $this->announcementRepository->update($request, $id);
+            $announcement = $this->announcementRepository->update($request);
             return $announcement;
         } catch (Exception $e) {
             return $e;
@@ -46,6 +46,15 @@ class AnnouncementService
     {
         try {
             $announcement = $this->announcementRepository->destroy($id);
+            return $announcement;
+        } catch (Exception $e) {
+            return $e;
+        }
+    }
+    public function show($id)
+    {
+        try {
+            $announcement = $this->announcementRepository->show($id);
             return $announcement;
         } catch (Exception $e) {
             return $e;

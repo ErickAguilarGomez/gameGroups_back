@@ -60,6 +60,7 @@ class AuthService
      */
     public function register(array $data)
     {
+        unset($data['password_confirmation']);
         $data['password'] = Hash::make($data['password']);
         $data['role_id'] = 2; // Usuario normal
         $data['photo_status'] = isset($data['photo_url']) ? 'pending' : null;

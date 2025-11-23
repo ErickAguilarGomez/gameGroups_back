@@ -18,6 +18,7 @@ class CreateAnnouncementTable extends Migration
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->string('url')->nullable();
+            $table->boolean('is_video')->default(0);
             $table->unsignedBigInteger('user_id')->nullable()->references('id')->on('users');
             $table->dateTime('start_date');
             $table->dateTime('end_date');

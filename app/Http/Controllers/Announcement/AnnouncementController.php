@@ -26,15 +26,21 @@ class AnnouncementController extends Controller
         return $announcement;
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $announcement = $this->announcementService->update($request, $id);
+        $announcement = $this->announcementService->update($request);
         return $announcement;
     }
 
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $announcement = $this->announcementService->destroy($id);
+        $announcement = $this->announcementService->destroy($request->id);
         return $announcement;
+    }
+
+    public function show(Request $request)
+    {
+        $id_parameter=$request->id;
+        return $this->announcementService->show($id_parameter);
     }
 }

@@ -15,26 +15,38 @@ class AnnouncementRepository
         $stm = null;
         $today = date('Y-m-d');
         if ($request->status == "active") {
-            $stm = DB::table('announcement')
-                ->where('start_date', '<=', $today)
-                ->where('end_date', '>=', $today)
-                ->whereNull('deleted_at')
-                ->paginate($request->per_page, ['*'], 'page', $request->page);
+            $query = DB::table('announcement')
+                ->where(DB::raw('DATE(start_date)'), '<=', $today)
+                ->where(DB::raw('DATE(end_date)'), '>=', $today)
+                ->whereNull('deleted_at');
+            if ($request->has('per_page') && $request->has('page')) {
+                $stm = $query->paginate($request->per_page, ['*'], 'page', $request->page);
+            } else {
+                $stm = $query->get();
+            }
         }
         if ($request->status == "next") {
-            $stm = DB::table('announcement')
-                ->where('start_date', '>', $today)
-                ->whereNull('deleted_at')
-                ->paginate($request->per_page, ['*'], 'page', $request->page);
+            $query = DB::table('announcement')
+                ->where(DB::raw('DATE(start_date)'), '>', $today)
+                ->whereNull('deleted_at');
+            if ($request->has('per_page') && $request->has('page')) {
+                $stm = $query->paginate($request->per_page, ['*'], 'page', $request->page);
+            } else {
+                $stm = $query->get();
+            }
         }
         if ($request->status == "inactive") {
-            $stm = DB::table('announcement')
+            $query = DB::table('announcement')
                 ->where(function ($query) use ($today) {
-                    $query->where('end_date', '<', $today)
+                    $query->where(DB::raw('DATE(end_date)'), '<', $today)
                         ->whereNull('deleted_at');
                 })
-                ->orWhereNotNull('deleted_at')
-                ->paginate($request->per_page, ['*'], 'page', $request->page);
+                ->orWhereNotNull('deleted_at');
+            if ($request->has('per_page') && $request->has('page')) {
+                $stm = $query->paginate($request->per_page, ['*'], 'page', $request->page);
+            } else {
+                $stm = $query->get();
+            }
         }
 
 
@@ -50,22 +62,26 @@ class AnnouncementRepository
                 'user_id' => $request->user_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
+                'is_video' => $request->is_video ?? 0,
+                'created_at' => now(),
             ]);
             return $announcement;
         } catch (Exception $e) {
             return $e;
         }
     }
-    public function update($request, $id)
+    public function update($request)
     {
         try {
-            $announcement = DB::table('announcement')->where('id', $id)->update([
+            $announcement = DB::table('announcement')->where('id', $request->id)->update([
                 'title' => $request->title,
                 'description' => $request->description,
                 'url' => $request->url,
                 'user_id' => $request->user_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
+                'is_video' => $request->is_video ?? 0,
+                'updated_at' => now(),
             ]);
             return $announcement;
         } catch (Exception $e) {
@@ -78,6 +94,15 @@ class AnnouncementRepository
             $announcement = DB::table('announcement')->where('id', $id)->update([
                 'deleted_at' => now(),
             ]);
+            return $announcement;
+        } catch (Exception $e) {
+            return $e;
+        }
+    }
+    public function show($id)
+    {
+        try {
+            $announcement = DB::table('announcement')->where('id', $id)->first();
             return $announcement;
         } catch (Exception $e) {
             return $e;

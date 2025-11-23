@@ -89,9 +89,11 @@ class UserController extends Controller
             'photo_url' => 'nullable|string|url',
             'social_network_id' => 'nullable|exists:social_networks,id',
             'password' => 'nullable|string|min:8|confirmed',
+            'country' => 'nullable|string|max:255',
+            'country_slug' => 'nullable|string|max:255',
         ]);
 
-        $data = $request->only(['name', 'nickname', 'birthdate', 'photo_url', 'social_network_id']);
+        $data = $request->only(['name', 'nickname', 'birthdate', 'photo_url', 'social_network_id', 'country', 'country_slug']);
         $data['photo_status'] = 'pending';
 
         // Si hay contraseña nueva, agregarla
