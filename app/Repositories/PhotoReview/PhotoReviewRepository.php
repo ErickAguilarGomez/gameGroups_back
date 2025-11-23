@@ -1,25 +1,19 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Repositories\PhotoReview;
 
-use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class PhotoReviewRepository
 {
-    protected $model;
-
-    public function __construct(User $model)
-    {
-        $this->model = $model;
-    }
-
     /**
      * Obtener usuarios con fotos pendientes
      */
     public function getPendingPhotos(): Collection
     {
-        return $this->model->where('photo_status', 'pending')
+        return DB::table('users')
+            ->where('photo_status', 'pending')
             ->whereNotNull('photo_url')
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -30,7 +24,8 @@ class PhotoReviewRepository
      */
     public function getApprovedPhotos(): Collection
     {
-        return $this->model->where('photo_status', 'approved')
+        return DB::table('users')
+            ->where('photo_status', 'approved')
             ->whereNotNull('photo_url')
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -41,7 +36,8 @@ class PhotoReviewRepository
      */
     public function getRejectedPhotos(): Collection
     {
-        return $this->model->where('photo_status', 'rejected')
+        return DB::table('users')
+            ->where('photo_status', 'rejected')
             ->orderBy('updated_at', 'desc')
             ->get();
     }
@@ -51,13 +47,9 @@ class PhotoReviewRepository
      */
     public function approvePhoto(int $userId): bool
     {
-        $user = $this->model->find($userId);
-        
-        if (!$user) {
-            return false;
-        }
-
-        return $user->update(['photo_status' => 'approved']);
+        return DB::table('users')
+            ->where('id', $userId)
+            ->update(['photo_status' => 'approved']) > 0;
     }
 
     /**
@@ -65,16 +57,12 @@ class PhotoReviewRepository
      */
     public function rejectPhoto(int $userId, ?string $reason = null): bool
     {
-        $user = $this->model->find($userId);
-        
-        if (!$user) {
-            return false;
-        }
-
-        return $user->update([
-            'photo_status' => 'rejected',
-            'photo_url' => null,
-            'rejection_reason' => $reason,
-        ]);
+        return DB::table('users')
+            ->where('id', $userId)
+            ->update([
+                'photo_status' => 'rejected',
+                'photo_url' => null,
+                'rejection_reason' => $reason,
+            ]) > 0;
     }
 }

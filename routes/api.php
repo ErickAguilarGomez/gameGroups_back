@@ -13,4 +13,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Public token creation (para backends externos) - el archivo tokens.php ya define /tokens/create
 require __DIR__ . '/api/Tokens/tokens.php';
-Route::get('/social-networks', [App\Http\Controllers\Api\SocialNetworkController::class, 'index']);
+require __DIR__ . '/api/SocialNetworks/socialnetworks.php';
+require __DIR__ . '/api/Cloudinary/cloudinary.php';

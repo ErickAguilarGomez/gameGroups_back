@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
 {
@@ -12,13 +13,15 @@ class AdminUserSeeder extends Seeder
         $adminEmail = env('ADMIN_EMAIL');
         $adminPassword = env('ADMIN_PASSWORD');
 
-        if (!User::where('email', $adminEmail)->exists()) {
-            User::create([
+        if (!DB::table('users')->where('email', $adminEmail)->exists()) {
+            DB::table('users')->insert([
                 'name'           => 'Administrator',
                 'email'          => $adminEmail,
-                'password'       => bcrypt($adminPassword),
+                'password'       => Hash::make($adminPassword),
                 'role_id'        => 1,
                 'account_status' => 'approved',
+                'created_at'     => now(),
+                'updated_at'     => now(),
             ]);
         }
 
@@ -30,16 +33,17 @@ class AdminUserSeeder extends Seeder
 
             $email = "{$assistantBase}{$i}@gmail.com";
 
-            if (!User::where('email', $email)->exists()) {
-                User::create([
+            if (!DB::table('users')->where('email', $email)->exists()) {
+                DB::table('users')->insert([
                     'name'           => "Assistant $i",
                     'email'          => $email,
-                    'password'       => bcrypt($assistantPassword),
+                    'password'       => Hash::make($assistantPassword),
                     'role_id'        => 3,
                     'account_status' => 'approved',
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
                 ]);
             }
         }
     }
 }
-

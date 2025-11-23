@@ -1,25 +1,19 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Repositories\RegistrationReview;
 
-use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class RegistrationReviewRepository
 {
-    protected $model;
-
-    public function __construct(User $model)
-    {
-        $this->model = $model;
-    }
-
     /**
      * Obtener usuarios pendientes de aprobación
      */
     public function getPendingRegistrations(): Collection
     {
-        return $this->model->where('account_status', 'pending')
+        return DB::table('users')
+            ->where('account_status', 'pending')
             ->orderBy('created_at', 'asc')
             ->get();
     }
@@ -29,7 +23,8 @@ class RegistrationReviewRepository
      */
     public function getApprovedRegistrations(): Collection
     {
-        return $this->model->where('account_status', 'approved')
+        return DB::table('users')
+            ->where('account_status', 'approved')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -39,7 +34,8 @@ class RegistrationReviewRepository
      */
     public function getRejectedRegistrations(): Collection
     {
-        return $this->model->where('account_status', 'rejected')
+        return DB::table('users')
+            ->where('account_status', 'rejected')
             ->orderBy('updated_at', 'desc')
             ->get();
     }
@@ -49,12 +45,6 @@ class RegistrationReviewRepository
      */
     public function approveRegistration(int $userId, bool $approvePhoto = true): bool
     {
-        $user = $this->model->find($userId);
-        
-        if (!$user) {
-            return false;
-        }
-
         $data = [
             'account_status' => 'approved',
             'rejection_reason' => null,
@@ -64,7 +54,7 @@ class RegistrationReviewRepository
             $data['photo_status'] = 'approved';
         }
 
-        return $user->update($data);
+        return DB::table('users')->where('id', $userId)->update($data) > 0;
     }
 
     /**
@@ -72,12 +62,6 @@ class RegistrationReviewRepository
      */
     public function rejectRegistration(int $userId, string $reason, bool $rejectPhoto = true): bool
     {
-        $user = $this->model->find($userId);
-        
-        if (!$user) {
-            return false;
-        }
-
         $data = [
             'account_status' => 'rejected',
             'rejection_reason' => $reason,
@@ -88,6 +72,6 @@ class RegistrationReviewRepository
             $data['photo_url'] = null;
         }
 
-        return $user->update($data);
+        return DB::table('users')->where('id', $userId)->update($data) > 0;
     }
 }

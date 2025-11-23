@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Repositories\UserRepository;
+use App\Repositories\User\UserRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AuthService
 {
@@ -19,7 +18,7 @@ class AuthService
     /**
      * Autenticar usuario
      */
-    public function login(string $email, string $password): ?User
+    public function login(string $email, string $password)
     {
         $credentials = [
             'email' => $email,
@@ -27,11 +26,10 @@ class AuthService
         ];
 
         if (Auth::attempt($credentials)) {
-            /** @var User $user */
-            $user = Auth::user();
-            $user->load(['role', 'socialNetwork']);
-            
-            return $user;
+            $genericUser = Auth::user();
+            $fullUser = $this->userRepository->findById($genericUser->id);
+
+            return $fullUser;
         }
 
         return null;
@@ -40,7 +38,7 @@ class AuthService
     /**
      * Verificar si el usuario está aprobado
      */
-    public function isUserApproved(User $user): bool
+    public function isUserApproved($user): bool
     {
         return $user->account_status === 'approved';
     }
@@ -48,7 +46,7 @@ class AuthService
     /**
      * Obtener mensaje de rechazo
      */
-    public function getRejectionMessage(User $user): string
+    public function getRejectionMessage($user): string
     {
         if ($user->account_status === 'pending') {
             return 'Tu cuenta está pendiente de aprobación por un administrador';
@@ -60,7 +58,7 @@ class AuthService
     /**
      * Registrar nuevo usuario
      */
-    public function register(array $data): User
+    public function register(array $data)
     {
         $data['password'] = Hash::make($data['password']);
         $data['role_id'] = 2; // Usuario normal
@@ -80,22 +78,22 @@ class AuthService
     /**
      * Obtener usuario autenticado
      */
-    public function getCurrentUser(): ?User
+    public function getCurrentUser()
     {
-        /** @var User|null $user */
-        $user = Auth::user();
-        
-        if ($user) {
-            $user->load('role');
+        $genericUser = Auth::user();
+
+        if ($genericUser) {
+            // Get complete user data from repository
+            return $this->userRepository->findById($genericUser->id);
         }
-        
-        return $user;
+
+        return null;
     }
 
     /**
      * Actualizar foto de perfil
      */
-    public function updatePhoto(User $user, string $photoUrl): bool
+    public function updatePhoto($user, string $photoUrl): bool
     {
         return $this->userRepository->update($user->id, [
             'photo_url' => $photoUrl,

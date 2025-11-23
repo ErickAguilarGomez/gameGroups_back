@@ -3,8 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\GroupRepository;
-use Illuminate\Database\Eloquent\Collection;
-use App\Models\Group;
+use Illuminate\Support\Collection;
 
 class GroupService
 {
@@ -15,91 +14,121 @@ class GroupService
         $this->groupRepository = $groupRepository;
     }
 
-    /**
-     * Obtener todos los grupos
-     */
-    public function getAllGroups(): Collection
+
+    public function createGroup($data)
     {
-        return $this->groupRepository->all();
+        try {
+            $result = $this->groupRepository->create($data);
+            return response()->json($result, 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al crear el grupo',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Obtener grupo por ID
-     */
-    public function getGroupById(int $id): ?Group
+    public function updateGroup($id, $data)
     {
-        return $this->groupRepository->findById($id);
+        try {
+            $result = $this->groupRepository->update($id, $data);
+            return response()->json([
+                'message' => 'Grupo actualizado exitosamente',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar el grupo',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Crear nuevo grupo
-     */
-    public function createGroup(array $data): Group
+    public function deleteGroup($id)
     {
-        return $this->groupRepository->create($data);
+        try {
+            $result = $this->groupRepository->delete($id);
+            return response()->json([
+                'message' => 'Grupo eliminado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al eliminar el grupo',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Actualizar grupo
-     */
-    public function updateGroup(int $id, array $data): bool
+
+
+    public function assignUserToGroup($userId, $groupId)
     {
-        return $this->groupRepository->update($id, $data);
+        try {
+            $result = $this->groupRepository->assignUser($userId, $groupId);
+            return response()->json([
+                'message' => 'Usuario asignado al grupo exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al asignar usuario al grupo',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Eliminar grupo
-     */
-    public function deleteGroup(int $id): bool
+
+    public function removeUserFromGroup($userId, $banReason, $bannedBy)
     {
-        return $this->groupRepository->delete($id);
+        try {
+            $result = $this->groupRepository->removeUser($userId, $banReason, $bannedBy);
+            return response()->json([
+                'message' => 'Usuario baneado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al banear usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Obtener usuarios de un grupo
-     */
-    public function getGroupUsers(int $groupId): Collection
+    public function unbanUser($userId)
     {
-        return $this->groupRepository->getUsersByGroup($groupId);
+        try {
+            $result = $this->groupRepository->unbanUser($userId);
+            return response()->json([
+                'message' => 'Usuario desbaneado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al desbanear usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Asignar usuario a un grupo
-     */
-    public function assignUserToGroup(int $userId, int $groupId): bool
+
+    public function groups()
     {
-        return $this->groupRepository->assignUser($userId, $groupId);
+        try {
+            return $this->groupRepository->groups();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener los grupos',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Remover usuario de un grupo (banearlo)
-     */
-    public function removeUserFromGroup(int $userId, ?string $banReason = null, ?int $bannedBy = null): bool
+    public function userDetail($id)
     {
-        return $this->groupRepository->removeUser($userId, $banReason, $bannedBy);
-    }
-
-    /**
-     * Desbanear usuario
-     */
-    public function unbanUser(int $userId): bool
-    {
-        return $this->groupRepository->unbanUser($userId);
-    }
-
-    /**
-     * Obtener usuarios baneados
-     */
-    public function getBannedUsers(): Collection
-    {
-        return $this->groupRepository->getBannedUsers();
-    }
-
-    /**
-     * Obtener usuarios sin grupo
-     */
-    public function getUsersWithoutGroup(): Collection
-    {
-        return $this->groupRepository->getUsersWithoutGroup();
+        try {
+            $result = $this->groupRepository->userDetail($id);
+            return $result;
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener Detalle del usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

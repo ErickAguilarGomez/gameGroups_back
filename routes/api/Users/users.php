@@ -1,14 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\User\UserController;
 
 Route::prefix('users')->group(function () {
     // Rutas de usuario autenticado
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/photo', [UserController::class, 'updatePhoto']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
-    
+
     // Rutas de gestión de usuarios (CEO)
     Route::get('/', [UserController::class, 'index']);
     Route::post('/by-tab', [UserController::class, 'getUsersByTab']);
@@ -21,8 +21,7 @@ Route::prefix('users')->group(function () {
     Route::post('/approve-without-photo', [UserController::class, 'approveWithoutPhoto']);
     Route::post('/update', [UserController::class, 'updateViaPost']);
     Route::post('/delete', [UserController::class, 'destroyViaPost']);
-    
-    Route::get('/connected', [UserController::class, 'connectedUsers']);
+
     Route::get('/{id}', [UserController::class, 'show']);
     Route::put('/{id}', [UserController::class, 'update']);
     Route::delete('/{id}', [UserController::class, 'destroy']);

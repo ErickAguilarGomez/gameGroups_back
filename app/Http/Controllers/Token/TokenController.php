@@ -1,15 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Token;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use Illuminate\Validation\ValidationException;
+use App\Services\Token\TokenService;
 
 class TokenController extends Controller
 {
+    protected $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     /**
      * Generate a Personal Access Token for API access
      * Este endpoint es para backends externos que necesitan un token Bearer
@@ -22,23 +27,9 @@ class TokenController extends Controller
             'token_name' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $result = $this->tokenService->createToken($request);
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Credenciales inválidas.'],
-            ]);
-        }
-
-        $token = $user->createToken($request->token_name)->plainTextToken;
-
-        // Cargar relación con role
-        $user->load('role');
-
-        return response()->json([
-            'token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+        return response()->json($result);
     }
 
     /**
@@ -46,7 +37,7 @@ class TokenController extends Controller
      */
     public function revokeToken(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $this->tokenService->revokeToken($request->user());
         return response()->json(['message' => 'Token revoked']);
     }
 
@@ -55,7 +46,7 @@ class TokenController extends Controller
      */
     public function revokeAllTokens(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $this->tokenService->revokeAllTokens($request->user());
         return response()->json(['message' => 'All tokens revoked']);
     }
 
@@ -64,7 +55,7 @@ class TokenController extends Controller
      */
     public function listTokens(Request $request)
     {
-        $tokens = $request->user()->tokens()->get(['id', 'name', 'created_at', 'last_used_at']);
+        $tokens = $this->tokenService->listTokens($request->user());
         return response()->json($tokens);
     }
 }

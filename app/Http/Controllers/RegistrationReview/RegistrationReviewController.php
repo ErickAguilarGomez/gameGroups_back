@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\RegistrationReview;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\RegistrationReviewService;
+use App\Services\RegistrationReview\RegistrationReviewService;
 
 class RegistrationReviewController extends Controller
 {
@@ -30,7 +31,7 @@ class RegistrationReviewController extends Controller
     {
         $photoDecision = $request->input('photo_decision', 'approve');
         $approvePhoto = $photoDecision === 'approve';
-        
+
         $approved = $this->registrationReviewService->approveRegistration($userId, $approvePhoto);
 
         if (!$approved) {
@@ -50,7 +51,7 @@ class RegistrationReviewController extends Controller
     public function reject(Request $request, $userId)
     {
         $reason = $request->input('reason', 'No especificado');
-        
+
         $rejected = $this->registrationReviewService->rejectRegistration($userId, $reason);
 
         if (!$rejected) {

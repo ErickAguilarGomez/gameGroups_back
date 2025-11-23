@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\User;
 
-use App\Repositories\UserRepository;
+use App\Repositories\User\UserRepository;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Collection;
-use App\Models\User;
+use Illuminate\Support\Collection;
 
 class UserService
 {
@@ -27,7 +26,7 @@ class UserService
     /**
      * Obtener usuario por ID
      */
-    public function getUserById(int $id): ?User
+    public function getUserById(int $id)
     {
         return $this->userRepository->findById($id);
     }
@@ -35,7 +34,7 @@ class UserService
     /**
      * Crear nuevo usuario
      */
-    public function createUser(array $data): User
+    public function createUser(array $data)
     {
         // Hashear password si existe
         if (isset($data['password'])) {
@@ -71,13 +70,6 @@ class UserService
         return $this->userRepository->delete($id);
     }
 
-    /**
-     * Obtener usuarios conectados
-     */
-    public function getConnectedUsers(int $minutes = 5): Collection
-    {
-        return $this->userRepository->getConnectedUsers($minutes);
-    }
 
     /**
      * Actualizar última conexión
@@ -114,10 +106,10 @@ class UserService
     /**
      * Verificar si el usuario puede realizar una acción
      */
-    public function canPerformAction(User $currentUser, int $targetUserId, string $action): bool
+    public function canPerformAction($currentUser, int $targetUserId, string $action): bool
     {
         // Admin puede hacer todo
-        if ($currentUser->isAdmin() || $currentUser->isAssistant()) {
+        if ($currentUser->role_id === 1 || $currentUser->role_id === 3) { // 1: admin, 3: assistant
             return true;
         }
 
@@ -132,7 +124,7 @@ class UserService
     /**
      * Buscar usuario por email
      */
-    public function getUserByEmail(string $email): ?User
+    public function getUserByEmail(string $email)
     {
         return $this->userRepository->findByEmail($email);
     }
@@ -151,5 +143,10 @@ class UserService
     public function getUsersByTab(int $tab, ?int $perPage = null, ?int $page = null, ?string $search = null)
     {
         return $this->userRepository->getUsersByTab($tab, $perPage, $page, $search);
+    }
+
+    public function getUserCounts()
+    {
+        return $this->userRepository->getUserCounts();
     }
 }

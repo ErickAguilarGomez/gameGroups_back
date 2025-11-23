@@ -4,15 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GroupController;
 
 Route::prefix('groups')->group(function () {
-    // Rutas específicas primero (antes de las rutas con parámetros)
-    Route::get('/users/without-group', [GroupController::class, 'usersWithoutGroup']);
-    Route::get('/users/banned', [GroupController::class, 'bannedUsers']);
     Route::post('/users/unban', [GroupController::class, 'unbanUser']);
-    
-    // Rutas de grupos
-    Route::get('/', [GroupController::class, 'index']);
+    Route::get('/all-groups', [GroupController::class, 'groups']);
+    Route::get('/user-detail/{id}', [GroupController::class, 'userDetail']);
     Route::post('/', [GroupController::class, 'store']);
-    Route::get('/{id}', [GroupController::class, 'show']);
     Route::put('/{id}', [GroupController::class, 'update']);
     Route::delete('/{id}', [GroupController::class, 'destroy']);
     Route::post('/{id}/assign', [GroupController::class, 'assignUser']);

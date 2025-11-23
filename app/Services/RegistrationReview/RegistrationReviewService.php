@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\RegistrationReview;
 
-use App\Repositories\RegistrationReviewRepository;
+use App\Repositories\RegistrationReview\RegistrationReviewRepository;
 use Illuminate\Database\Eloquent\Collection;
 
 class RegistrationReviewService

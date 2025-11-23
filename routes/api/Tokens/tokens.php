@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\TokenController;
+use App\Http\Controllers\Token\TokenController;
 
 Route::prefix('tokens')->group(function () {
     Route::post('/revoke', [TokenController::class, 'revokeToken']);

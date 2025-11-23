@@ -1,19 +1,23 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services\Cloudinary;
 
-use Illuminate\Http\Request;
+use App\Repositories\Cloudinary\CloudinaryRepository;
 
-class CloudinaryController extends Controller
+class CloudinaryService
 {
-    /**
-     * Generar firma para upload de Cloudinary
-     */
-    public function generateSignature(Request $request)
+    protected $cloudinaryRepository;
+
+    public function __construct(CloudinaryRepository $cloudinaryRepository)
+    {
+        $this->cloudinaryRepository = $cloudinaryRepository;
+    }
+
+    public function generateSignature($request)
     {
         $timestamp = time();
         $folder = $request->input('folder', 'user_photos');
-        
+
         $params = [
             'timestamp' => $timestamp,
             'folder' => $folder,
@@ -26,12 +30,13 @@ class CloudinaryController extends Controller
         }
         $paramString = rtrim($paramString, '&');
         $signature = hash('sha256', $paramString . env('CLOUDINARY_API_SECRET'));
-        return response()->json([
+
+        return [
             'signature' => $signature,
             'timestamp' => $timestamp,
             'api_key' => env('CLOUDINARY_API_KEY'),
             'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
             'folder' => $folder,
-        ]);
+        ];
     }
 }

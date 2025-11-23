@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\PhotoReview;
 
-use App\Repositories\PhotoReviewRepository;
+use App\Repositories\PhotoReview\PhotoReviewRepository;
 use Illuminate\Database\Eloquent\Collection;
 
 class PhotoReviewService

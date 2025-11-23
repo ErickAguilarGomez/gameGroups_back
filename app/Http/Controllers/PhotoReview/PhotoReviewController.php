@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\PhotoReview;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\PhotoReviewService;
+use App\Services\PhotoReview\PhotoReviewService;
 
 class PhotoReviewController extends Controller
 {
@@ -14,18 +15,13 @@ class PhotoReviewController extends Controller
         $this->photoReviewService = $photoReviewService;
     }
 
-    /**
-     * Listar usuarios con fotos pendientes de revisión
-     */
+
     public function pending()
     {
         $users = $this->photoReviewService->getPendingPhotos();
         return response()->json($users);
     }
 
-    /**
-     * Aprobar foto de usuario
-     */
     public function approve(Request $request, $userId)
     {
         $approved = $this->photoReviewService->approvePhoto($userId);
@@ -41,9 +37,7 @@ class PhotoReviewController extends Controller
         ]);
     }
 
-    /**
-     * Rechazar foto de usuario
-     */
+
     public function reject(Request $request, $userId)
     {
         $request->validate([
@@ -64,9 +58,7 @@ class PhotoReviewController extends Controller
         ]);
     }
 
-    /**
-     * Obtener estadísticas de fotos
-     */
+
     public function stats()
     {
         $pending = $this->photoReviewService->getPendingPhotos()->count();

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PhotoReviewController;
+use App\Http\Controllers\PhotoReview\PhotoReviewController;
 
 Route::prefix('photos')->group(function () {
     Route::get('/pending', [PhotoReviewController::class, 'pending']);

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\UserService;
+use App\Services\User\UserService;
 
 class UserController extends Controller
 {
@@ -23,28 +23,29 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
-
-        // Cargar relaciones necesarias
-        $user->load('role', 'socialNetwork');
+        $fullUser = $this->userService->getUserById($user->id);
+        if (!$fullUser) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
 
         return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role->name ?? 'user',
-            'role_id' => $user->role_id,
-            'last_seen' => $user->last_seen,
-            'photo_url' => $user->photo_url,
-            'photo_status' => $user->photo_status,
-            'account_status' => $user->account_status,
-            'group_id' => $user->group_id,
-            'nickname' => $user->nickname,
-            'birthdate' => $user->birthdate,
-            'social_network_id' => $user->social_network_id,
-            'social_network' => $user->socialNetwork,
-            'banned_at' => $user->banned_at,
-            'ban_reason' => $user->ban_reason,
-            'banned_by' => $user->banned_by,
+            'id' => $fullUser->id,
+            'name' => $fullUser->name,
+            'email' => $fullUser->email,
+            'role' => $fullUser->role_name ?? 'user',
+            'role_id' => $fullUser->role_id,
+            'last_seen' => $fullUser->last_seen,
+            'photo_url' => $fullUser->photo_url,
+            'photo_status' => $fullUser->photo_status,
+            'account_status' => $fullUser->account_status,
+            'group_id' => $fullUser->group_id,
+            'nickname' => $fullUser->nickname,
+            'birthdate' => $fullUser->birthdate,
+            'social_network_id' => $fullUser->social_network_id,
+            'social_network' => $fullUser->social_network_id ?? null,
+            'banned_at' => $fullUser->banned_at,
+            'ban_reason' => $fullUser->ban_reason,
+            'banned_by' => $fullUser->banned_by,
         ]);
     }
 
@@ -106,13 +107,13 @@ class UserController extends Controller
 
         // Obtener usuario actualizado con relaciones
         $updatedUser = $this->userService->getUserById($user->id);
-        $updatedUser->load('role', 'socialNetwork');
+        // $updatedUser is now a stdClass, no need to load()
 
         return response()->json([
             'id' => $updatedUser->id,
             'name' => $updatedUser->name,
             'email' => $updatedUser->email,
-            'role' => $updatedUser->role->name ?? 'user',
+            'role' => $updatedUser->role_name ?? 'user',
             'role_id' => $updatedUser->role_id,
             'last_seen' => $updatedUser->last_seen,
             'photo_url' => $updatedUser->photo_url,
@@ -122,17 +123,21 @@ class UserController extends Controller
             'nickname' => $updatedUser->nickname,
             'birthdate' => $updatedUser->birthdate,
             'social_network_id' => $updatedUser->social_network_id,
-            'social_network' => $updatedUser->socialNetwork,
+            'social_network' => $updatedUser->social_network_id ? [
+                'id' => $updatedUser->social_network_id,
+                'name' => $updatedUser->social_network_name,
+                'icon' => $updatedUser->social_network_icon,
+            ] : null,
             'banned_at' => $updatedUser->banned_at,
             'ban_reason' => $updatedUser->ban_reason,
             'banned_by' => $updatedUser->banned_by,
         ]);
     }
 
-   
+
     public function index(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -142,7 +147,7 @@ class UserController extends Controller
 
     public function getUsersByTab(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -150,9 +155,9 @@ class UserController extends Controller
         $perPage = $request->input('per_page') ? (int) $request->input('per_page') : 10;
         $page = $request->input('page') ? (int) $request->input('page') : 1;
         $search = $request->input('search', null);
-        
+
         $result = $this->userService->getUsersByTab($tab, $perPage, $page, $search);
-        
+
         // Si es paginado, devolver estructura con meta
         if ($result instanceof \Illuminate\Pagination\LengthAwarePaginator) {
             return response()->json([
@@ -165,43 +170,40 @@ class UserController extends Controller
                 'to' => $result->lastItem()
             ]);
         }
-        
+
         // Si no es paginado, devolver array simple
         return response()->json($result);
     }
 
     public function getCounters(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        $counts = $this->userService->getUserCounts();
+
         $counters = [
-            'activeUsers' => $this->userService->getUsersByTab(1, null, null, null)->count(),
-            'pendingPhotos' => $this->userService->getUsersByTab(2, null, null, null)->count(),
-            'rejectedUsers' => $this->userService->getUsersByTab(3, null, null, null)->count(),
-            'pendingApproval' => $this->userService->getUsersByTab(4, null, null, null)->count(),
+            'activeUsers' => $counts->activeUsers,
+            'pendingPhotos' => $counts->pendingPhotos,
+            'rejectedUsers' => $counts->rejectedUsers,
+            'pendingApproval' => $counts->pendingApproval,
         ];
 
         return response()->json($counters);
     }
 
-    public function connectedUsers(Request $request)
-    {
-        $minutes = (int) $request->get('minutes', 5);
-        $users = $this->userService->getConnectedUsers($minutes);
-        return response()->json($users);
-    }
-
 
     public function show(Request $request, $id)
     {
-        if (!$request->user()->isAdminOrAssistant() && $request->user()->id != $id) {
+        $isAuthorized = in_array($request->user()->role_id, [1, 3]) || $request->user()->id == $id;
+
+        if (!$isAuthorized) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $user = $this->userService->getUserById($id);
-        
+
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
@@ -214,7 +216,7 @@ class UserController extends Controller
     // Métodos específicos para CEO
     public function approvePhoto(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -236,7 +238,7 @@ class UserController extends Controller
 
     public function rejectPhoto(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -259,7 +261,7 @@ class UserController extends Controller
 
     public function approveAccount(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -281,7 +283,7 @@ class UserController extends Controller
 
     public function rejectAccount(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -304,7 +306,7 @@ class UserController extends Controller
 
     public function approveWithPhoto(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -328,7 +330,7 @@ class UserController extends Controller
 
     public function approveWithoutPhoto(Request $request)
     {
-        if (!$request->user()->isAdminOrAssistant()) {
+        if (!in_array($request->user()->role_id, [1, 3])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -337,7 +339,7 @@ class UserController extends Controller
         ]);
 
         $user = $this->userService->getUserById($request->user_id);
-        
+
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
@@ -369,7 +371,10 @@ class UserController extends Controller
 
         $id = $request->user_id;
 
-        if (!$request->user()->isAdmin() && $request->user()->id != $id) {
+        // 1: admin
+        $isAuthorized = $request->user()->role_id === 1 || $request->user()->id == $id;
+
+        if (!$isAuthorized) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -391,7 +396,8 @@ class UserController extends Controller
 
     public function destroyViaPost(Request $request)
     {
-        if (!$request->user()->isAdmin()) {
+        // 1: admin
+        if ($request->user()->role_id !== 1) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -400,11 +406,11 @@ class UserController extends Controller
         ]);
 
         $deleted = $this->userService->deleteUser($request->user_id);
-        
+
         if (!$deleted) {
             return response()->json(['message' => 'Error al eliminar usuario'], 400);
         }
-        
+
         return response()->json(['message' => 'User deleted']);
     }
 }

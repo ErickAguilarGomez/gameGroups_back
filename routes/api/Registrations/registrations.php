@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RegistrationReviewController;
+use App\Http\Controllers\RegistrationReview\RegistrationReviewController;
 
 Route::prefix('registrations')->group(function () {
     Route::get('/pending', [RegistrationReviewController::class, 'pending']);

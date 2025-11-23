@@ -50,14 +50,14 @@ class SpaAuthController extends Controller
             'photo_rejection_reason' => $user->photo_rejection_reason,
             'account_status' => $user->account_status,
             'rejection_reason' => $user->rejection_reason,
-            'role' => $user->role->name ?? 'user',
+            'role' => $user->role_name ?? 'user',
             'role_id' => $user->role_id,
             'group_id' => $user->group_id,
             'ban_reason' => $user->ban_reason,
             'banned_by' => $user->banned_by,
             'last_seen' => $user->last_seen,
             'social_network_id' => $user->social_network_id,
-            'social_network' => $user->socialNetwork,
+            'social_network' => $user->social_network_id ?? null,
             'photo_url' => $user->photo_url,
             'photo_status' => $user->photo_status,
             'banned_at' => $user->banned_at,
@@ -83,20 +83,27 @@ class SpaAuthController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        
-        // Cargar la relación socialNetwork si no está cargada
-        $user->load('socialNetwork');
-        
+
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role->name ?? 'user',
-            'role_id' => $user->role_id,
-            'last_seen' => $user->last_seen,
             'nickname' => $user->nickname,
+            'birthdate' => $user->birthdate,
+            'email' => $user->email,
+            'photo_rejection_reason' => $user->photo_rejection_reason,
+            'account_status' => $user->account_status,
+            'rejection_reason' => $user->rejection_reason,
+            'role' => $user->role_name ?? 'user',
+            'role_id' => $user->role_id,
+            'group_id' => $user->group_id,
+            'ban_reason' => $user->ban_reason,
+            'banned_by' => $user->banned_by,
+            'last_seen' => $user->last_seen,
             'social_network_id' => $user->social_network_id,
-            'social_network' => $user->socialNetwork,
+            'social_network' => $user->social_network_id ?? null,
+            'photo_url' => $user->photo_url,
+            'photo_status' => $user->photo_status,
+            'banned_at' => $user->banned_at,
         ]);
     }
 }

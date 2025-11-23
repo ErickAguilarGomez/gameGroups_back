@@ -1,57 +1,40 @@
 <?php
+
 namespace App\Repositories;
 
-use App\Models\Role;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class RoleRepository
 {
-    protected $model;
-
-    public function __construct(Role $model)
-    {
-        $this->model = $model;
-    }
-
     public function all(): Collection
     {
-        return $this->model->all();
+        return DB::table('roles')->get();
     }
 
-    public function findById(int $id): ?Role
+    public function findById(int $id)
     {
-        return $this->model->find($id);
+        return DB::table('roles')->where('id', $id)->first();
     }
 
-    public function findByName(string $name): ?Role
+    public function findByName(string $name)
     {
-        return $this->model->where('name', $name)->first();
+        return DB::table('roles')->where('name', $name)->first();
     }
 
-    public function create(array $data): Role
+    public function create(array $data)
     {
-        return $this->model->create($data);
+        $id = DB::table('roles')->insertGetId($data);
+        return $this->findById($id);
     }
 
     public function update(int $id, array $data): bool
     {
-        $role = $this->findById($id);
-        
-        if (!$role) {
-            return false;
-        }
-
-        return $role->update($data);
+        return DB::table('roles')->where('id', $id)->update($data) > 0;
     }
 
     public function delete(int $id): bool
     {
-        $role = $this->findById($id);
-        
-        if (!$role) {
-            return false;
-        }
-
-        return $role->delete();
+        return DB::table('roles')->where('id', $id)->delete() > 0;
     }
 }

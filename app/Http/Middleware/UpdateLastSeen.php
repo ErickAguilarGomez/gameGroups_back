@@ -4,24 +4,19 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UpdateLastSeen
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
 
         if ($request->user()) {
-            $request->user()->update(['last_seen' => now()]);
+            DB::table('users')
+                ->where('id', $request->user()->id)
+                ->update(['last_seen' => now()]);
         }
-
         return $response;
     }
 }
