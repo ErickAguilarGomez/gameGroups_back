@@ -15,6 +15,39 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
+    protected function transformUserData($user): array
+    {
+        if (!$user) {
+            return [];
+        }
+
+        return [
+            'id' => (int) $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role_name ?? 'user',
+            'role_id' => (int) $user->role_id,
+            'last_seen' => $user->last_seen,
+            'photo_url' => $user->photo_url,
+            'photo_status' => $user->photo_status,
+            'account_status' => $user->account_status ?? null,
+            'group_id' => $user->group_id ? (int) $user->group_id : null,
+            'nickname' => $user->nickname ?? null,
+            'birthdate' => $user->birthdate ?? null,
+            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
+            'social_network_name' => $user->social_network_name ?? null,
+            'social_network_icon' => $user->social_network_icon ?? null,
+            'banned_at' => $user->banned_at ?? null,
+            'ban_reason' => $user->ban_reason ?? null,
+            'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
+            'photo_rejection_reason' => $user->photo_rejection_reason ?? null,
+            'rejection_reason' => $user->rejection_reason ?? null,
+            'country' => $user->country ?? null,
+            'country_slug' => $user->country_slug ?? null,
+        ];
+    }
+
+
 
     public function me(Request $request)
     {
@@ -29,23 +62,23 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'id' => $fullUser->id,
+            'id' => (int) $fullUser->id,
             'name' => $fullUser->name,
             'email' => $fullUser->email,
             'role' => $fullUser->role_name ?? 'user',
-            'role_id' => $fullUser->role_id,
+            'role_id' => (int) $fullUser->role_id,
             'last_seen' => $fullUser->last_seen,
             'photo_url' => $fullUser->photo_url,
             'photo_status' => $fullUser->photo_status,
             'account_status' => $fullUser->account_status,
-            'group_id' => $fullUser->group_id,
+            'group_id' => $fullUser->group_id ? (int) $fullUser->group_id : null,
             'nickname' => $fullUser->nickname,
             'birthdate' => $fullUser->birthdate,
-            'social_network_id' => $fullUser->social_network_id,
+            'social_network_id' => $fullUser->social_network_id ? (int) $fullUser->social_network_id : null,
             'social_network' => $fullUser->social_network_id ?? null,
             'banned_at' => $fullUser->banned_at,
             'ban_reason' => $fullUser->ban_reason,
-            'banned_by' => $fullUser->banned_by,
+            'banned_by' => $fullUser->banned_by ? (int) $fullUser->banned_by : null,
         ]);
     }
 
@@ -112,27 +145,27 @@ class UserController extends Controller
         // $updatedUser is now a stdClass, no need to load()
 
         return response()->json([
-            'id' => $updatedUser->id,
+            'id' => (int) $updatedUser->id,
             'name' => $updatedUser->name,
             'email' => $updatedUser->email,
             'role' => $updatedUser->role_name ?? 'user',
-            'role_id' => $updatedUser->role_id,
+            'role_id' => (int) $updatedUser->role_id,
             'last_seen' => $updatedUser->last_seen,
             'photo_url' => $updatedUser->photo_url,
             'photo_status' => $updatedUser->photo_status,
             'account_status' => $updatedUser->account_status,
-            'group_id' => $updatedUser->group_id,
+            'group_id' => $updatedUser->group_id ? (int) $updatedUser->group_id : null,
             'nickname' => $updatedUser->nickname,
             'birthdate' => $updatedUser->birthdate,
-            'social_network_id' => $updatedUser->social_network_id,
+            'social_network_id' => $updatedUser->social_network_id ? (int) $updatedUser->social_network_id : null,
             'social_network' => $updatedUser->social_network_id ? [
-                'id' => $updatedUser->social_network_id,
+                'id' => (int) $updatedUser->social_network_id,
                 'name' => $updatedUser->social_network_name,
                 'icon' => $updatedUser->social_network_icon,
             ] : null,
             'banned_at' => $updatedUser->banned_at,
             'ban_reason' => $updatedUser->ban_reason,
-            'banned_by' => $updatedUser->banned_by,
+            'banned_by' => $updatedUser->banned_by ? (int) $updatedUser->banned_by : null,
         ]);
     }
 
@@ -144,7 +177,8 @@ class UserController extends Controller
         }
 
         $users = $this->userService->getAllUsers();
-        return response()->json($users);
+        $transformedUsers = $users->map(fn($user) => $this->transformUserData($user));
+        return response()->json($transformedUsers);
     }
 
     public function getUsersByTab(Request $request)
@@ -162,8 +196,9 @@ class UserController extends Controller
 
         // Si es paginado, devolver estructura con meta
         if ($result instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            $transformedItems = collect($result->items())->map(fn($user) => $this->transformUserData($user));
             return response()->json([
-                'data' => $result->items(),
+                'data' => $transformedItems,
                 'current_page' => $result->currentPage(),
                 'last_page' => $result->lastPage(),
                 'per_page' => $result->perPage(),
@@ -173,8 +208,9 @@ class UserController extends Controller
             ]);
         }
 
-        // Si no es paginado, devolver array simple
-        return response()->json($result);
+        // Si no es paginado, devolver array simple transformado
+        $transformedResult = collect($result)->map(fn($user) => $this->transformUserData($user));
+        return response()->json($transformedResult);
     }
 
     public function getCounters(Request $request)
@@ -210,7 +246,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        return response()->json($user);
+        return response()->json($this->transformUserData($user));
     }
 
 
@@ -393,7 +429,7 @@ class UserController extends Controller
         }
 
         $user = $this->userService->getUserById($id);
-        return response()->json($user);
+        return response()->json($this->transformUserData($user));
     }
 
     public function destroyViaPost(Request $request)

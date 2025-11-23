@@ -42,7 +42,7 @@ class SpaAuthController extends Controller
         }
         $request->session()->regenerate();
         return response()->json([
-            'id' => $user->id,
+            'id' => (int) $user->id,
             'name' => $user->name,
             'nickname' => $user->nickname,
             'birthdate' => $user->birthdate,
@@ -51,12 +51,12 @@ class SpaAuthController extends Controller
             'account_status' => $user->account_status,
             'rejection_reason' => $user->rejection_reason,
             'role' => $user->role_name ?? 'user',
-            'role_id' => $user->role_id,
-            'group_id' => $user->group_id,
+            'role_id' => (int) $user->role_id,
+            'group_id' => $user->group_id ? (int) $user->group_id : null,
             'ban_reason' => $user->ban_reason,
-            'banned_by' => $user->banned_by,
+            'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
             'last_seen' => $user->last_seen,
-            'social_network_id' => $user->social_network_id,
+            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
             'social_network' => $user->social_network_id ?? null,
             'photo_url' => $user->photo_url,
             'photo_status' => $user->photo_status,
@@ -85,7 +85,7 @@ class SpaAuthController extends Controller
         }
 
         return response()->json([
-            'id' => $user->id,
+            'id' => (int) $user->id,
             'name' => $user->name,
             'nickname' => $user->nickname,
             'birthdate' => $user->birthdate,
@@ -94,12 +94,12 @@ class SpaAuthController extends Controller
             'account_status' => $user->account_status,
             'rejection_reason' => $user->rejection_reason,
             'role' => $user->role_name ?? 'user',
-            'role_id' => $user->role_id,
-            'group_id' => $user->group_id,
+            'role_id' => (int) $user->role_id,
+            'group_id' => $user->group_id ? (int) $user->group_id : null,
             'ban_reason' => $user->ban_reason,
-            'banned_by' => $user->banned_by,
+            'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
             'last_seen' => $user->last_seen,
-            'social_network_id' => $user->social_network_id,
+            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
             'social_network' => $user->social_network_id ?? null,
             'photo_url' => $user->photo_url,
             'photo_status' => $user->photo_status,
