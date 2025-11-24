@@ -32,11 +32,15 @@ class UserController extends Controller
             'photo_status' => $user->photo_status,
             'account_status' => $user->account_status ?? null,
             'group_id' => $user->group_id ? (int) $user->group_id : null,
+            'group_name' => $user->group_name ?? null,
+            'group_img_url' => $user->group_img_url ?? null,
             'nickname' => $user->nickname ?? null,
             'birthdate' => $user->birthdate ?? null,
-            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
             'social_network_name' => $user->social_network_name ?? null,
-            'social_network_icon' => $user->social_network_icon ?? null,
+            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
+            'social_network_logo_url' => $user->social_network_logo_url ?? null,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
             'banned_at' => $user->banned_at ?? null,
             'ban_reason' => $user->ban_reason ?? null,
             'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
@@ -72,10 +76,13 @@ class UserController extends Controller
             'photo_status' => $fullUser->photo_status,
             'account_status' => $fullUser->account_status,
             'group_id' => $fullUser->group_id ? (int) $fullUser->group_id : null,
+            'group_name' => $fullUser->group_name ?? null,
+            'group_img_url' => $fullUser->group_img_url ?? null,
             'nickname' => $fullUser->nickname,
             'birthdate' => $fullUser->birthdate,
             'social_network_id' => $fullUser->social_network_id ? (int) $fullUser->social_network_id : null,
-            'social_network' => $fullUser->social_network_id ?? null,
+            'social_network_name' => $fullUser->social_network_name ?? null,
+            'social_network_logo_url' => $fullUser->social_network_logo_url ?? null,
             'banned_at' => $fullUser->banned_at,
             'ban_reason' => $fullUser->ban_reason,
             'banned_by' => $fullUser->banned_by ? (int) $fullUser->banned_by : null,
@@ -127,7 +134,15 @@ class UserController extends Controller
         ]);
 
         $data = $request->only(['name', 'nickname', 'birthdate', 'photo_url', 'social_network_id', 'country', 'country_slug']);
-        $data['photo_status'] = 'pending';
+
+        if (isset($data['social_network_id'])) {
+            $data['social_network_id'] = (int) $data['social_network_id'];
+        }
+
+        $currentPhoto = $user->photo_url;
+        if ($request->photo_url != $currentPhoto) {
+            $data['photo_status'] = 'pending';
+        }
 
         // Si hay contraseña nueva, agregarla
         if ($request->filled('password')) {
@@ -155,13 +170,17 @@ class UserController extends Controller
             'photo_status' => $updatedUser->photo_status,
             'account_status' => $updatedUser->account_status,
             'group_id' => $updatedUser->group_id ? (int) $updatedUser->group_id : null,
+            'group_name' => $updatedUser->group_name ?? null,
+            'group_img_url' => $updatedUser->group_img_url ?? null,
             'nickname' => $updatedUser->nickname,
             'birthdate' => $updatedUser->birthdate,
             'social_network_id' => $updatedUser->social_network_id ? (int) $updatedUser->social_network_id : null,
+            'social_network_name' => $updatedUser->social_network_name,
+            'social_network_logo_url' => $updatedUser->social_network_logo_url,
             'social_network' => $updatedUser->social_network_id ? [
                 'id' => (int) $updatedUser->social_network_id,
                 'name' => $updatedUser->social_network_name,
-                'icon' => $updatedUser->social_network_icon,
+                'logo_url' => $updatedUser->social_network_logo_url,
             ] : null,
             'banned_at' => $updatedUser->banned_at,
             'ban_reason' => $updatedUser->ban_reason,
@@ -421,6 +440,8 @@ class UserController extends Controller
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'password' => 'sometimes|string|min:8',
         ]);
+        $validated['updated_at'] = now();
+
 
         $updated = $this->userService->updateUser($id, $validated);
 
@@ -435,7 +456,7 @@ class UserController extends Controller
     public function destroyViaPost(Request $request)
     {
         // 1: admin
-        if ($request->user()->role_id !== 1) {
+        if ((int) $request->user()->role_id !== 1) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

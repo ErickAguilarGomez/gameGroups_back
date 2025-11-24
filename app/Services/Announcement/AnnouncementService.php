@@ -17,47 +17,27 @@ class AnnouncementService
 
     public function index($request)
     {
-        try {
-            $announcement = $this->announcementRepository->index($request);
-            return $announcement;
-        } catch (Exception $e) {
-            return $e;
-        }
+        $announcement = $this->announcementRepository->index($request);
+        return $announcement;
     }
     public function store($request)
     {
-        try {
-            $announcement = $this->announcementRepository->store($request);
-            return $announcement;
-        } catch (Exception $e) {
-            return $e;
-        }
+        $announcement = $this->announcementRepository->store($request);
+        return $announcement;
     }
     public function update($request)
     {
-        try {
-            $announcement = $this->announcementRepository->update($request);
-            return $announcement;
-        } catch (Exception $e) {
-            return $e;
-        }
+        $announcement = $this->announcementRepository->update($request);
+        return $announcement;
     }
     public function destroy($id)
     {
-        try {
-            $announcement = $this->announcementRepository->destroy($id);
-            return $announcement;
-        } catch (Exception $e) {
-            return $e;
-        }
+        $announcement = $this->announcementRepository->destroy($id);
+        return $announcement;
     }
     public function show($id)
     {
-        try {
-            $announcement = $this->announcementRepository->show($id);
-            return $announcement;
-        } catch (Exception $e) {
-            return $e;
-        }
+        $announcement = $this->announcementRepository->show($id);
+        return $announcement;
     }
 }

@@ -38,7 +38,14 @@ class RegisterController extends Controller
             ], 422);
         }
 
-        $user = $this->authService->register($request->all());
+        $data = $request->all();
+        if (isset($data['social_network_id'])) {
+            $data['social_network_id'] = (int) $data['social_network_id'];
+        }
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+
+        $user = $this->authService->register($data);
 
         return response()->json([
             'message' => 'Usuario registrado exitosamente',
@@ -72,4 +79,3 @@ class RegisterController extends Controller
         ], 500);
     }
 }
- 

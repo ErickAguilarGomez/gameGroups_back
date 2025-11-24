@@ -38,47 +38,82 @@ class AnnouncementController extends Controller
     }
     public function index(Request $request)
     {
-        $announcements = $this->announcementService->index($request);
-        if ($announcements instanceof \Illuminate\Pagination\LengthAwarePaginator) {
-            $transformedItems = collect($announcements->items())->map(fn($ann) => $this->transformAnnouncementData($ann));
-            return response()->json([
-                'data' => $transformedItems,
-                'current_page' => $announcements->currentPage(),
-                'last_page' => $announcements->lastPage(),
-                'per_page' => $announcements->perPage(),
-                'total' => $announcements->total(),
-                'from' => $announcements->firstItem(),
-                'to' => $announcements->lastItem()
-            ]);
-        }
+        try {
+            $announcements = $this->announcementService->index($request);
+            if ($announcements instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+                $transformedItems = collect($announcements->items())->map(fn($ann) => $this->transformAnnouncementData($ann));
+                return response()->json([
+                    'data' => $transformedItems,
+                    'current_page' => $announcements->currentPage(),
+                    'last_page' => $announcements->lastPage(),
+                    'per_page' => $announcements->perPage(),
+                    'total' => $announcements->total(),
+                    'from' => $announcements->firstItem(),
+                    'to' => $announcements->lastItem()
+                ]);
+            }
 
-        // Handle collection results
-        $transformed = collect($announcements)->map(fn($ann) => $this->transformAnnouncementData($ann));
-        return response()->json($transformed);
+            // Handle collection results
+            $transformed = collect($announcements)->map(fn($ann) => $this->transformAnnouncementData($ann));
+            return response()->json($transformed);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching announcements',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $announcement = $this->announcementService->store($request);
-        return $announcement;
+        try {
+            $announcement = $this->announcementService->store($request);
+            return $announcement;
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error creating announcement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request)
     {
-        $announcement = $this->announcementService->update($request);
-        return $announcement;
+        try {
+            $announcement = $this->announcementService->update($request);
+            return $announcement;
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error updating announcement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Request $request)
     {
-        $announcement = $this->announcementService->destroy($request->id);
-        return $announcement;
+        try {
+            $announcement = $this->announcementService->destroy($request->id);
+            return $announcement;
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting announcement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Request $request)
     {
-        $id_parameter = $request->id;
-        $announcement = $this->announcementService->show($id_parameter);
-        return response()->json($this->transformAnnouncementData($announcement));
+        try {
+            $id_parameter = $request->id;
+            $announcement = $this->announcementService->show($id_parameter);
+            return response()->json($this->transformAnnouncementData($announcement));
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching announcement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -41,8 +41,9 @@ class UserRepository
                 'users.country_slug',
                 'roles.name as role_name',
                 'groups.name as group_name',
+                'groups.group_img_url as group_img_url',
                 'social_networks.name as social_network_name',
-                'social_networks.logo_url as social_network_icon'
+                'social_networks.logo_url as social_network_logo_url'
             )
             ->orderBy('users.created_at', 'desc')
             ->get();
@@ -58,8 +59,9 @@ class UserRepository
                 'users.*',
                 'roles.name as role_name',
                 'groups.name as group_name',
+                'groups.group_img_url as group_img_url',
                 'social_networks.name as social_network_name',
-                'social_networks.logo_url as social_network_icon'
+                'social_networks.logo_url as social_network_logo_url'
             )
             ->where('users.id', $id)
             ->first();
@@ -74,7 +76,7 @@ class UserRepository
                 'users.*',
                 'roles.name as role_name',
                 'social_networks.name as social_network_name',
-                'social_networks.logo_url as social_network_icon'
+                'social_networks.logo_url as social_network_logo_url'
             )
             ->where('users.email', $email)
             ->first();
@@ -82,10 +84,6 @@ class UserRepository
 
     public function create(array $data)
     {
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        }
-
         $data['created_at'] = now();
         $data['updated_at'] = now();
 
@@ -143,42 +141,44 @@ class UserRepository
 
     public function getUsersByTab(int $tab, ?int $perPage = null, ?int $page = null, ?string $search = null)
     {
-        $query = DB::table('users')
-            ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
-            ->leftJoin('groups', 'users.group_id', '=', 'groups.id')
-            ->leftJoin('social_networks', 'users.social_network_id', '=', 'social_networks.id')
+        $query = DB::table('users as u')
+            ->leftJoin('roles as r', 'u.role_id', '=', 'r.id')
+            ->leftJoin('groups as g', 'u.group_id', '=', 'g.id')
+            ->leftJoin('social_networks as sn', 'u.social_network_id', '=', 'sn.id')
             ->select(
-                'users.*',
-                'roles.name as role_name',
-                'groups.name as group_name',
-                'social_networks.name as social_network_name'
+                'u.*',
+                'r.name as role_name',
+                'g.name as group_name',
+                'g.group_img_url as group_img_url',
+                'sn.name as social_network_name',
+                'sn.logo_url as social_network_logo_url'
             )
-            ->whereNotIn('users.role_id', [1, 3])
-            ->orderBy('users.created_at', 'desc');
+            ->whereNotIn('u.role_id', [1, 3])
+            ->orderBy('u.created_at', 'desc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                    ->orWhere('users.email', 'like', "%{$search}%");
+                $q->where('u.name', 'like', "%{$search}%")
+                    ->orWhere('u.email', 'like', "%{$search}%");
             });
         }
 
         switch ($tab) {
             case 2:
-                $query->where('users.account_status', 'approved')
-                    ->where('users.photo_status', 'pending');
+                $query->where('u.account_status', 'approved')
+                    ->where('u.photo_status', 'pending');
                 break;
 
             case 3:
-                $query->where('users.account_status', 'rejected');
+                $query->where('u.account_status', 'rejected');
                 break;
 
             case 4:
-                $query->where('users.account_status', 'pending');
+                $query->where('u.account_status', 'pending');
                 break;
 
             default:
-                $query->where('users.account_status', 'approved');
+                $query->where('u.account_status', 'approved');
                 break;
         }
 
