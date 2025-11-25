@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\User\UserService;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -65,28 +66,42 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        return response()->json([
-            'id' => (int) $fullUser->id,
-            'name' => $fullUser->name,
-            'email' => $fullUser->email,
-            'role' => $fullUser->role_name ?? 'user',
-            'role_id' => (int) $fullUser->role_id,
-            'last_seen' => $fullUser->last_seen,
-            'photo_url' => $fullUser->photo_url,
-            'photo_status' => $fullUser->photo_status,
-            'account_status' => $fullUser->account_status,
-            'group_id' => $fullUser->group_id ? (int) $fullUser->group_id : null,
-            'group_name' => $fullUser->group_name ?? null,
-            'group_img_url' => $fullUser->group_img_url ?? null,
-            'nickname' => $fullUser->nickname,
-            'birthdate' => $fullUser->birthdate,
-            'social_network_id' => $fullUser->social_network_id ? (int) $fullUser->social_network_id : null,
-            'social_network_name' => $fullUser->social_network_name ?? null,
-            'social_network_logo_url' => $fullUser->social_network_logo_url ?? null,
-            'banned_at' => $fullUser->banned_at,
-            'ban_reason' => $fullUser->ban_reason,
-            'banned_by' => $fullUser->banned_by ? (int) $fullUser->banned_by : null,
-        ]);
+        $user_data = DB::table('users as u')
+            ->join('roles as r', 'u.role_id', '=', 'r.id')
+            ->leftJoin('groups as g', 'u.group_id', '=', 'g.id')
+            ->leftJoin('social_networks as sn', 'u.social_network_id', '=', 'sn.id')
+            ->where('u.id', $fullUser->id)
+            ->select(
+                'u.id',
+                'u.name',
+                'u.email',
+                'r.name as role_name',
+                'r.id as role_id',
+                'u.last_seen',
+                'u.photo_url',
+                'u.photo_status',
+                'u.account_status',
+                'u.group_id',
+                'g.name as group_name',
+                'g.group_img_url',
+                'u.nickname',
+                'u.birthdate',
+                'u.social_network_id',
+                'sn.name as social_network_name',
+                'sn.logo_url as social_network_logo_url',
+                'u.banned_at',
+                'u.ban_reason',
+                'u.banned_by',
+                'u.photo_rejection_reason',
+                'u.rejection_reason',
+                'u.country',
+                'u.country_slug',
+                'u.created_at',
+                'u.updated_at'
+            )
+            ->first();
+
+        return response()->json($user_data);
     }
 
     public function updatePhoto(Request $request)
@@ -177,11 +192,8 @@ class UserController extends Controller
             'social_network_id' => $updatedUser->social_network_id ? (int) $updatedUser->social_network_id : null,
             'social_network_name' => $updatedUser->social_network_name,
             'social_network_logo_url' => $updatedUser->social_network_logo_url,
-            'social_network' => $updatedUser->social_network_id ? [
-                'id' => (int) $updatedUser->social_network_id,
-                'name' => $updatedUser->social_network_name,
-                'logo_url' => $updatedUser->social_network_logo_url,
-            ] : null,
+            'country' => $updatedUser->country,
+            'country_slug' => $updatedUser->country_slug,
             'banned_at' => $updatedUser->banned_at,
             'ban_reason' => $updatedUser->ban_reason,
             'banned_by' => $updatedUser->banned_by ? (int) $updatedUser->banned_by : null,

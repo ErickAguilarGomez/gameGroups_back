@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\AuthService;
+use Illuminate\Support\Facades\DB;
 
 class SpaAuthController extends Controller
 {
@@ -40,31 +41,41 @@ class SpaAuthController extends Controller
             $message = $this->authService->getRejectionMessage($user);
             return response()->json(['message' => $message], 403);
         }
+
+        $user_data = DB::table('users as u')
+            ->where('u.id', $user->id)
+            ->select(
+                'u.id',
+                'u.email',
+                'u.name',
+                'u.nickname',
+                'u.birthdate',
+                'u.photo_rejection_reason',
+                'u.account_status',
+                'u.rejection_reason',
+                'u.role_id',
+                'g.id as group_id',
+                'g.name as group_name',
+                'g.group_img_url',
+                'u.ban_reason',
+                'u.banned_by',
+                'u.last_seen',
+                'sn.id as social_network_id',
+                'sn.name as social_network_name',
+                'sn.logo_url as social_network_logo_url',
+                'u.photo_url',
+                'u.photo_status',
+                'u.banned_at',
+                'u.country',
+                'u.country_slug'
+            )
+            ->leftJoin('social_networks as sn', 'u.social_network_id', '=', 'sn.id')
+            ->leftJoin('groups as g', 'u.group_id', '=', 'g.id')
+            ->join('roles as r', 'u.role_id', '=', 'r.id')
+            ->first();
+
         $request->session()->regenerate();
-        return response()->json([
-            'id' => (int) $user->id,
-            'name' => $user->name,
-            'nickname' => $user->nickname,
-            'birthdate' => $user->birthdate,
-            'email' => $user->email,
-            'photo_rejection_reason' => $user->photo_rejection_reason,
-            'account_status' => $user->account_status,
-            'rejection_reason' => $user->rejection_reason,
-            'role' => $user->role_name ?? 'user',
-            'role_id' => (int) $user->role_id,
-            'group_id' => $user->group_id ? (int) $user->group_id : null,
-            'group_name' => $user->group_name ?? null,
-            'group_img_url' => $user->group_img_url ?? null,
-            'ban_reason' => $user->ban_reason,
-            'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
-            'last_seen' => $user->last_seen,
-            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
-            'social_network_name' => $user->social_network_name ?? null,
-            'social_network_logo_url' => $user->social_network_logo_url ?? null,
-            'photo_url' => $user->photo_url,
-            'photo_status' => $user->photo_status,
-            'banned_at' => $user->banned_at,
-        ]);
+        return response()->json($user_data);
     }
 
     public function logout(Request $request)
@@ -86,30 +97,37 @@ class SpaAuthController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
+        $get_user_data = DB::table('users as u')->where('u.id', $user->id)
+            ->select(
+                'u.id',
+                'u.email',
+                'u.name',
+                'u.nickname',
+                'u.birthdate',
+                'u.photo_rejection_reason',
+                'u.account_status',
+                'u.rejection_reason',
+                'u.role_id',
+                'g.id as group_id',
+                'g.name as group_name',
+                'g.img_url as group_img_url',
+                'u.ban_reason',
+                'u.banned_by',
+                'u.last_seen',
+                'sn.id as social_network_id',
+                'sn.name as social_network_name',
+                'sn.logo_url as social_network_logo_url',
+                'u.photo_url',
+                'u.photo_status',
+                'u.banned_at',
+                'u.country',
+                'u.country_slug'
+            )
+            ->leftJoin('social_networks as sn', 'u.social_network_id', '=', 'sn.id')
+            ->leftJoin('groups as g', 'u.group_id', '=', 'g.id')
+            ->join('roles as r', 'u.role_id', '=', 'r.id')
+            ->first();
 
-        return response()->json([
-            'id' => (int) $user->id,
-            'name' => $user->name,
-            'nickname' => $user->nickname,
-            'birthdate' => $user->birthdate,
-            'email' => $user->email,
-            'photo_rejection_reason' => $user->photo_rejection_reason,
-            'account_status' => $user->account_status,
-            'rejection_reason' => $user->rejection_reason,
-            'role' => $user->role_name ?? 'user',
-            'role_id' => (int) $user->role_id,
-            'group_id' => $user->group_id ? (int) $user->group_id : null,
-            'group_name' => $user->group_name ?? null,
-            'group_img_url' => $user->group_img_url ?? null,
-            'ban_reason' => $user->ban_reason,
-            'banned_by' => $user->banned_by ? (int) $user->banned_by : null,
-            'last_seen' => $user->last_seen,
-            'social_network_id' => $user->social_network_id ? (int) $user->social_network_id : null,
-            'social_network_name' => $user->social_network_name ?? null,
-            'social_network_logo_url' => $user->social_network_logo_url ?? null,
-            'photo_url' => $user->photo_url,
-            'photo_status' => $user->photo_status,
-            'banned_at' => $user->banned_at,
-        ]);
+        return response()->json($get_user_data);
     }
 }
