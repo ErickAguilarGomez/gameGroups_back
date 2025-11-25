@@ -16,18 +16,7 @@ class AnnouncementRepository
         $today = date('Y-m-d');
         if ($request->status == "active") {
             $query = DB::table('announcement')
-                ->where(DB::raw('DATE(start_date)'), '<=', $today)
                 ->where(DB::raw('DATE(end_date)'), '>=', $today)
-                ->whereNull('deleted_at');
-            if ($request->has('per_page') && $request->has('page')) {
-                $stm = $query->paginate($request->per_page, ['*'], 'page', $request->page);
-            } else {
-                $stm = $query->get();
-            }
-        }
-        if ($request->status == "next") {
-            $query = DB::table('announcement')
-                ->where(DB::raw('DATE(start_date)'), '>', $today)
                 ->whereNull('deleted_at');
             if ($request->has('per_page') && $request->has('page')) {
                 $stm = $query->paginate($request->per_page, ['*'], 'page', $request->page);
