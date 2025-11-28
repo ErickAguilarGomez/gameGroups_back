@@ -8,6 +8,7 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__ . '/api/Registrations/registrations.php';
     require __DIR__ . '/api/Groups/groups.php';
     require __DIR__ . '/api/Announcement/announcement.php';
+    require __DIR__ . '/api/Questionary/questionary.php';
 });
 
 
